@@ -73,6 +73,11 @@ function App() {
               {i + 1}. {p.name}
             </span>
           ))}
+          {route.length >= 2 && (
+            <span className="text-xs text-green-400 ml-1">
+              🚶Route ready — check the map!
+            </span>
+          )}
           <button onClick={() => setRoute([])} className="text-xs text-red-400 hover:text-red-300 ml-auto">
             Clear
           </button>
@@ -119,6 +124,7 @@ function App() {
               center={userLocation}
               places={places}
               onSelectPlace={() => {}}
+              route={route}
             />
           ) : (
             <div className="flex-1 bg-gray-900 rounded-xl flex items-center justify-center">

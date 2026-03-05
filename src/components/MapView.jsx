@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 
-export default function MapView({ center, places, selectedPlace, onSelectPlace }) {
+export default function MapView({ center, places, onSelectPlace, route = [] }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const routeRendererRef = useRef(null);
 
   useEffect(() => {
     if (!center || !mapRef.current) return;
@@ -76,6 +77,49 @@ export default function MapView({ center, places, selectedPlace, onSelectPlace }
       mapInstanceRef.current.panTo(places[0].geometry.location);
     }
   }, [places]);
+
+  useEffect(() => {
+  if (!mapInstanceRef.current) return;
+
+  if (routeRendererRef.current) {
+    routeRendererRef.current.setMap(null);
+  }
+
+  if (route.length < 2) return;
+
+  const directionsService = new window.google.maps.DirectionsService();
+  const directionsRenderer = new window.google.maps.DirectionsRenderer({
+    map: mapInstanceRef.current,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: "#6366f1",
+      strokeWeight: 4,
+      strokeOpacity: 0.8,
+    },
+  });
+
+  routeRendererRef.current = directionsRenderer;
+
+  const waypoints = route.slice(1, -1).map((p) => ({
+    location: p.geometry.location,
+    stopover: true,
+  }));
+
+  directionsService.route(
+    {
+      origin: route[0].geometry.location,
+      destination: route[route.length - 1].geometry.location,
+      waypoints,
+      travelMode: window.google.maps.TravelMode.WALKING,
+      optimizeWaypoints: true,
+    },
+    (result, status) => {
+      if (status === "OK") {
+        directionsRenderer.setDirections(result);
+      }
+    }
+  );
+}, [route]);
 
   return (
     <div ref={mapRef} className="w-full h-full rounded-xl" />
